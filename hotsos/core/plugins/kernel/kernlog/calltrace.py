@@ -16,7 +16,7 @@ from hotsos.core.plugins.kernel.kernlog.common import (
 KERNLOG_TS = r'\[\s*\d+\.\d+\]'
 KERNLOG_PREFIX = (r'(?:\S+\s+\d+\s+[\d:]+\s+\S+\s+\S+:\s+)?{}'.
                   format(KERNLOG_TS))
-
+KERNLOG_PROMPT_PREFIX = "Please explain the following call traces in detail and give all the possible suggestions to resolve the issue:\n"
 
 class OOMTraceHeuristicCheckFreePages(CallTraceHeuristicBase):
     """
@@ -86,6 +86,7 @@ class GenericTraceType(TraceTypeBase):
     def __init__(self):
         self._search_def = None
         self.generics = []
+        self.prompt = KERNLOG_PROMPT_PREFIX
 
     @property
     def name(self):
@@ -98,9 +99,12 @@ class GenericTraceType(TraceTypeBase):
 
         # Very basic, just a simple expression to identify that a call trace
         # has occurred.
-        expr = r'.+Call Trace:'
+        expr = r'.+Call [tT]race:'
         self._search_def = SearchDef(expr, tag=self.name)
         return self._search_def
+
+    def gen_llm_prompt(self, path):
+        print("TODO: generic call trace")
 
     def apply(self, results):
         """
@@ -123,6 +127,9 @@ class GenericTraceType(TraceTypeBase):
 
     def __len__(self):
         return len(self.generics)
+
+    def __str__(self):
+        return self.prompt
 
     def __iter__(self):
         for generics in self.generics:
@@ -235,6 +242,9 @@ class BcacheDeadlockType(TraceTypeBase):
                                              end=end)
         return self._search_def
 
+    def gen_llm_prompt(self, path):
+        print("TODO: bcache deadlock")
+
     def apply(self, results):
         """
         Run through the results.
@@ -282,6 +292,9 @@ class FanotifyDeadlockType(TraceTypeBase):
         self._search_def = SequenceSearchDef(start, tag='fanotify', body=body,
                                              end=end)
         return self._search_def
+
+    def gen_llm_prompt(self, path):
+        print("TODO: fanotify deadlock")
 
     def apply(self, results):
         """
@@ -335,6 +348,9 @@ class OOMKillerTraceType(TraceTypeBase):
         self._search_def = SequenceSearchDef(start, tag='oom', body=body,
                                              end=end)
         return self._search_def
+
+    def gen_llm_prompt(self, path):
+        print("TODO: OOM killer")
 
     def apply(self, results):
         log.debug("%s has %s results", self.__class__.__name__, len(results))
@@ -409,6 +425,7 @@ class HungtaskTraceType(TraceTypeBase):
     def __init__(self):
         self._search_def = None
         self.hungtasks = []
+        self.prompt = KERNLOG_PROMPT_PREFIX
 
     @property
     def name(self):
@@ -425,6 +442,24 @@ class HungtaskTraceType(TraceTypeBase):
         self._search_def = SequenceSearchDef(start, tag='hungtask', body=body,
                                              end=end)
         return self._search_def
+
+    def gen_llm_prompt(self, path):
+        with open(path, 'r') as kernellog:
+            lines = kernellog.readlines()
+            calltrace_start = False
+            print_start = False
+            for line in lines:
+                if ' blocked for more than ' in line:
+                    print_start = True
+                if calltrace_start:
+                    if ']  ' not in line:
+                        break
+                if print_start:
+                    if 'Call trace:' in line or 'Call Trace:' in line:
+                        calltrace_start = True
+                if print_start:
+                    columns = line.rstrip('\n').split(']')
+                    self.prompt += ''.join(columns[1:])
 
     def apply(self, results):
         """
@@ -445,6 +480,9 @@ class HungtaskTraceType(TraceTypeBase):
 
     def __len__(self):
         return len(self.hungtasks)
+
+    def __str__(self):
+        return self.prompt
 
     def __iter__(self):
         for hungtasks in self.hungtasks:
@@ -474,6 +512,7 @@ class CallTraceManager(KernLogBase):
                 results = self.results.find_by_tag(tracetype.searchdef.tag)
 
             tracetype.apply(results)
+            tracetype.gen_llm_prompt(self.path)
 
     def __getattr__(self, name):
         """

@@ -27,4 +27,5 @@ class YRequirementTypeProperty(YRequirementTypeWithOpsBase):
         self.cache.set('property', path)
         self.cache.set('ops', self.ops_to_str(self.ops))
         self.cache.set('value_actual', actual)
+        self.cache.set('prompt', actual)
         return result

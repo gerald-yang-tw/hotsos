@@ -29,8 +29,10 @@ conclusions:
       type: KernelError
       message: >-
         {numreports} reports of stacktraces in kern.log - please check.
+        LLM prompt - {llmprompt}
       format-dict:
         numreports: '@checks.has_stacktraces.requires.value_actual:len'
+        llmprompt: '@checks.has_stacktraces.requires.prompt:str'
   oom-killer-invoked:   
     priority: 2
     decision: has_oom_killer_invoked
@@ -38,8 +40,10 @@ conclusions:
       type: MemoryWarning
       message: >-
         {numreports} reports of oom-killer invoked in kern.log - please check.
+        LLM prompt - {llmprompt}
       format-dict:
         numreports: '@checks.has_oom_killer_invoked.requires.value_actual:len'
+        llmprompt: '@checks.has_oom_killer.requires.prompt:str'
   bcache-deadlock-invoked:   
     priority: 2
     decision: has_bcache_deadlock_invoked
@@ -59,8 +63,10 @@ conclusions:
       type: KernelError
       message: >-
         {numreports} reports of hung tasks in kern.log - please check.
+        LLM prompt - {llmprompt}
       format-dict:
         numreports: '@checks.has_hungtasks.requires.value_actual:len'
+        llmprompt: '@checks.has_hungtasks.requires.prompt:str'
   fanotify_hangs:
     priority: 2
     decision: has_fanotify_hang
@@ -69,5 +75,7 @@ conclusions:
       message: >-
         {numreports} reports of fanotify related hangs in kern.log. This may
         be related to antivirus software running in the system.
+        LLM prompt - {llmprompt}
       format-dict:
         numreports: '@checks.has_fanotify_hang.requires.value_actual:len'
+        llmprompt: '@checks.has_fanotify_hang.requires.prompt:str'
