@@ -16,7 +16,6 @@ from hotsos.core.plugins.kernel.kernlog.common import (
 KERNLOG_TS = r'\[\s*\d+\.\d+\]'
 KERNLOG_PREFIX = (r'(?:\S+\s+\d+\s+[\d:]+\s+\S+\s+\S+:\s+)?{}'.
                   format(KERNLOG_TS))
-KERNLOG_PROMPT_PREFIX = "Please explain the following call traces in detail and give all the possible suggestions to resolve the issue:\n"
 
 class OOMTraceHeuristicCheckFreePages(CallTraceHeuristicBase):
     """
@@ -86,7 +85,7 @@ class GenericTraceType(TraceTypeBase):
     def __init__(self):
         self._search_def = None
         self.generics = []
-        self.prompt = KERNLOG_PROMPT_PREFIX
+        self.prompt = ""
 
     @property
     def name(self):
@@ -425,7 +424,7 @@ class HungtaskTraceType(TraceTypeBase):
     def __init__(self):
         self._search_def = None
         self.hungtasks = []
-        self.prompt = KERNLOG_PROMPT_PREFIX
+        self.prompt = ""
 
     @property
     def name(self):
