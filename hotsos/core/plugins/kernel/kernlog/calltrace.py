@@ -457,7 +457,7 @@ class HungtaskTraceType(TraceTypeBase):
                     if 'Call trace:' in line or 'Call Trace:' in line:
                         calltrace_start = True
                 if print_start:
-                    columns = line.rstrip('\n').split(']')
+                    columns = line.rstrip.split(']')
                     self.prompt += ''.join(columns[1:])
 
     def apply(self, results):
